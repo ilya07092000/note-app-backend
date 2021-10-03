@@ -62,5 +62,3 @@ typings/
 
 # VSCode settings
 .vscode/
-
-.env.example

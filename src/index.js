@@ -29,7 +29,7 @@ const server = new ApolloServer({
   context: ({ req }) => {
     const token = req.headers.authorization;
     const user = verifyUser(token);
-    console.log(user);
+ 
     return { models, user };
   }
 });

@@ -6,24 +6,48 @@ const {
 } = require('apollo-server-express');
 const gravatar = require('../util/gravatar');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 const Mutation = {
-  newNote: async (parent, args, { models }) => {
+  newNote: async (parent, args, { models, user }) => {
+    if (!user) {
+      return new AuthenticationError('You must be logged in');
+    }
+
     return await models.Note.create({
       content: args.content,
-      author: 'Me'
+      author: mongoose.Types.ObjectId(user.id),
     });
   },
-  deleteNote: async (parent, { id }, { models }) => {
+  deleteNote: async (parent, { id }, { models, user }) => {
+    if (!user) {
+      return new AuthenticationError('You must be logged in');
+    }
+
+    const note = await models.Note.findOne({ _id: id });
+
+    if (note && String(note.author) !== user.id) {
+      throw new ForbiddenError('You do not have permission');
+    }
+
     try {
-      await models.Note.findOneAndRemove({ _id: id });
+      await note.remove();
       return true;
     } catch (err) {
-      console.log(err);
       return false;
     }
   },
-  updateNote: async (parent, { content, id }, { models }) => {
+  updateNote: async (parent, { content, id }, { models, user }) => {
+    if (!user) {
+      return new AuthenticationError('You must be logged in');
+    }
+
+    const note = await models.Note.findOne({ _id: id });
+
+    if (note && String(note.author) !== user.id) {
+      throw new ForbiddenError('You do not have permission');
+    }
+
     return await models.Note.findOneAndUpdate(
       {
         _id: id
@@ -63,7 +87,7 @@ const Mutation = {
     })
 
     if (!user) {
-      throw new AuthenticationError('Error')
+      throw new AuthenticationError('Invalid email or password')
     }
 
     const hmac = crypto.createHmac('sha512', '10');

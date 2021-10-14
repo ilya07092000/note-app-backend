@@ -99,7 +99,48 @@ const Mutation = {
     };
 
     return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-  }
+  },
+  toggleFavorite: async (parent, { id }, { models, user }) => {
+    if (!user) {
+      return new AuthenticationError('You must be logged in');
+    }
+
+    const note = await models.Note.findById(id);
+    const noteHasCurrUser = note.favoritedBy.includes(user.id);
+    console.log(note.id, id);
+    
+    if (noteHasCurrUser) {
+      return await models.Note.findByIdAndUpdate(
+        id,
+        {
+          $pull: {
+            favoritedBy: mongoose.Types.ObjectId(user.id)
+          },
+          $inc: {
+            favoriteCount: -1
+          }
+        },
+        {
+          new: true,
+        }
+      )
+    } else {
+      return await models.Note.findByIdAndUpdate(
+        id,
+        {
+          $push: {
+            favoritedBy: mongoose.Types.ObjectId(user.id)
+          },
+          $inc: {
+            favoriteCount: 1
+          }
+        },
+        {
+          new: true,
+        }
+      )
+    }
+  },
 };
 
 module.exports = Mutation;

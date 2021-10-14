@@ -28,7 +28,7 @@ const typeDefs = gql`
     email: String!
     avatar: String!
     notes: [Note!]!
-    favourites: [Note!]!
+    favorites: [Note!]!
   }
 
   type Mutation {

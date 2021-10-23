@@ -1,4 +1,6 @@
 const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
 const { ApolloServer } = require('apollo-server-express');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -11,6 +13,8 @@ const resolvers = require('./resolvers/index');
 const models = require('./models/index');
 
 const app = express();
+app.use(helmet());
+app.use(cors());
 db.connect(DB_HOST);
 
 const verifyUser = (token) => {

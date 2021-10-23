@@ -10,7 +10,7 @@ const Query = {
     return await models.User.findOne({ email });
   },
   users: async (parent, args, { models }) => {
-    return await models.User.find({});
+    return await models.User.find({}).limit(100);
   },
   me: async (parent, args, { models, user }) => {
     console.log(user);

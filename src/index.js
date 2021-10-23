@@ -24,7 +24,7 @@ const verifyUser = (token) => {
     try {
       return jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
-      return 'Error';
+      throw new Error('Invalid credentials');
     }
   }
 };

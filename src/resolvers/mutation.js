@@ -81,10 +81,8 @@ const Mutation = {
       throw new Error('Error with account creating');
     }
   },
-  signIn: async (parent, { username, email, password }, { models }) => {
-    const user = await models.User.findOne({
-      $or: [{email}, {username}]
-    })
+  signIn: async (parent, { email, password }, { models }) => {
+    const user = await models.User.findOne({ email })
 
     if (!user) {
       throw new AuthenticationError('Invalid email or password')
@@ -95,7 +93,7 @@ const Mutation = {
     const hashedPass = hmac.digest('hex');
     
     if (hashedPass !== user.password) {
-      throw new AuthenticationError('Error');
+      throw new AuthenticationError('Invalid email or password')
     };
 
     return jwt.sign({ id: user._id }, process.env.JWT_SECRET);

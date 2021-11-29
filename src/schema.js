@@ -3,6 +3,11 @@ const { gql } = require("apollo-server-express");
 const typeDefs = gql`
   scalar DateTime
 
+  type UserAuth {
+    user: User!
+    token: String!
+  }
+
   type Query {
     hello: String
     notes: [Note!]!
@@ -36,8 +41,8 @@ const typeDefs = gql`
     newNote(content: String!): Note!
     updateNote(id: ID!, content: String!): Note!
     deleteNote(id: ID!): Boolean!
-    signUp(username: String!, email: String!, password: String!): String!
-    signIn(email: String!, password: String!): String!
+    signup(username: String!, email: String!, password: String!): UserAuth!
+    signin(email: String!, password: String!): UserAuth!
     toggleFavorite(id: ID!): Note!
   }
 

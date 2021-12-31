@@ -1,4 +1,4 @@
-const { gql } = require("apollo-server-express");
+const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
   scalar DateTime
@@ -22,6 +22,7 @@ const typeDefs = gql`
     id: ID!
     content: String!
     author: User!
+    favorited: Boolean!
     createdAt: DateTime!
     updatedAt: DateTime!
     favoriteCount: Int!
@@ -43,7 +44,12 @@ const typeDefs = gql`
     deleteNote(id: ID!): Boolean!
     signup(username: String!, email: String!, password: String!): UserAuth!
     signin(email: String!, password: String!): UserAuth!
-    toggleFavorite(id: ID!): Note!
+    toggleFavorite(id: ID!): ToggleFavoritedAnswer!
+  }
+
+  type ToggleFavoritedAnswer {
+    id: ID!
+    favorited: Boolean
   }
 
   type NoteFeed {

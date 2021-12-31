@@ -17,6 +17,7 @@ const Mutation = {
     return await models.Note.create({
       content: args.content,
       author: mongoose.Types.ObjectId(user.id),
+      favorited: false,
     });
   },
   deleteNote: async (parent, { id }, { models, user }) => {
@@ -62,12 +63,12 @@ const Mutation = {
       }
     );
   },
-  signUp: async (parent, { username, email, password }, { models }) => {
+  signup: async (parent, { username, email, password }, { models }) => {
     const hmac = crypto.createHmac('sha512', '10');
     hmac.update(password);
     const hashedPass = hmac.digest('hex');
     const avatar = gravatar(email);
-
+   
     try {
       const user = await models.User.create({
         username,
@@ -75,13 +76,23 @@ const Mutation = {
         avatar,
         password: hashedPass
       });
-
-      return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-    } catch (err) {
+      
+      return {
+        user: {
+          username,
+          email, 
+          avatar
+        },
+        token: jwt.sign({ id: user._id }, process.env.JWT_SECRET),
+      };
+    } catch ({ errmsg }) {
+      if (errmsg.includes('email') && errmsg.includes('duplicate')) {
+        throw new Error('Email duplication');
+      }
       throw new Error('Error with account creating');
     }
   },
-  signIn: async (parent, { email, password }, { models }) => {
+  signin: async (parent, { email, password }, { models }) => {
     const user = await models.User.findOne({ email })
 
     if (!user) {
@@ -96,7 +107,14 @@ const Mutation = {
       throw new AuthenticationError('Invalid email or password')
     };
 
-    return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    return {
+      token: jwt.sign({ id: user._id }, process.env.JWT_SECRET),
+      user: {
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      },
+    };
   },
   toggleFavorite: async (parent, { id }, { models, user }) => {
     if (!user) {
@@ -105,10 +123,9 @@ const Mutation = {
 
     const note = await models.Note.findById(id);
     const noteHasCurrUser = note.favoritedBy.includes(user.id);
-    console.log(note.id, id);
     
     if (noteHasCurrUser) {
-      return await models.Note.findByIdAndUpdate(
+      await models.Note.findByIdAndUpdate(
         id,
         {
           $pull: {
@@ -122,8 +139,13 @@ const Mutation = {
           new: true,
         }
       )
+
+      return {
+        id,
+        favorited: false,
+      };
     } else {
-      return await models.Note.findByIdAndUpdate(
+      await models.Note.findByIdAndUpdate(
         id,
         {
           $push: {
@@ -137,6 +159,11 @@ const Mutation = {
           new: true,
         }
       )
+
+      return {
+        id,
+        favorited: true,
+      };
     }
   },
 };
